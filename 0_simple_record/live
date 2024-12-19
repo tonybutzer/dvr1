@@ -1,0 +1,7 @@
+#! /bin/bash
+
+dir=/home/tony/tv/video
+
+chan=$1
+
+celluloid http://192.168.0.93:5004/auto/$chan
