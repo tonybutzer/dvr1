@@ -1,3 +1,9 @@
+- tv) tony@dopey:~/opt/dvr1$ mkdir 1_livetv
+- (tv) tony@dopey:~/opt/dvr1$ mkdir 2_tuner_daemon
+- (tv) tony@dopey:~/opt/dvr1$ mkdir 3_diagnostic_tools
+- (tv) tony@dopey:~/opt/dvr1$ mkdir libdvr
+
+
 # dvr1
 new inproved hd dvr
 
