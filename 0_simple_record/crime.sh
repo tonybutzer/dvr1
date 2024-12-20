@@ -4,5 +4,7 @@
 # test favorite channels
 
 dir=/home/tony/tv/video
+show=murder
+chan=13.4
 
-curl -o $dir/crime.ts 192.168.0.93:5004/auto/v13.4?duration=14400 &
+curl -o $dir/$show.ts 192.168.0.93:5004/auto/v$chan?duration=14400 &
