@@ -29,7 +29,7 @@ def parse_plex_playlist(xml_file):
     return media_items
 
 # Example usage:
-xml_file_path = './playlist_sample.xml'
+xml_file_path = './playlist_grammy.xml'
 playlist_items = parse_plex_playlist(xml_file_path)
 
 for item in playlist_items:
