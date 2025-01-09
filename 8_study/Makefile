@@ -8,3 +8,7 @@ jup:
 
 publish:
 	(cd ..; make publish)
+
+
+guide:
+	python orig_zap2xml.py -z 57103

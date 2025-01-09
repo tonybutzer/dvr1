@@ -8,6 +8,7 @@ pesky:
 
 
 publish:
+	cat ~/token.txt
 	git add .
 	git commit -m "sleepy work 2022 November"
 	git push
@@ -37,3 +38,6 @@ toctool:
 toc:
 	gh-md-toc --insert --no-backup README.md
 
+
+down:
+	
