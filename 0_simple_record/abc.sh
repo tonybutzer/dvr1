@@ -4,7 +4,7 @@
 # test favorite channels
 
 dir=/home/tony/tv/video
-show=college_playoff_1
+show=football8hours2
 chan=13.1
 
 curl -o $dir/$show.ts 192.168.0.93:5004/auto/v$chan?duration=14400 &

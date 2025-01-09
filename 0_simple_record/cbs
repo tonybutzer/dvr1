@@ -4,7 +4,7 @@
 # test favorite channels
 
 dir=/home/tony/tv/video
-show=colbert
+show=cbs
 chan=11.1
 
-curl -o $dir/$show.ts 192.168.0.93:5004/auto/v$chan?duration=3900 &
+curl -o $dir/$show.ts 192.168.0.93:5004/auto/v$chan?duration=14400 &
