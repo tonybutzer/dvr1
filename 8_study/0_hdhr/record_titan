@@ -137,8 +137,9 @@ def schedule_record(a):
     etitle = a.get('episode-title', 'One') 
     at_time = make_at_time(a['start-date'], a['start-time'])
                 
-    name_of_recording = f'{station}_{ptitle}_{etitle}_{at_time}.ts'
+    name_of_recording = f'{ptitle}_{etitle}_{station}_{at_time}'
     clean_name_of_recording = clean_string(name_of_recording)
+    clean_name_of_recording = f'{clean_name_of_recording}.ts'
     print(clean_name_of_recording)
     # process duration
     dur = a['duration']

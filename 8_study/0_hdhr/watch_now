@@ -163,8 +163,9 @@ def schedule_record(a):
     at_time = current_time
     print(at_time)
                 
-    name_of_recording = f'{station}_{ptitle}_{etitle}_{at_time}.ts'
+    name_of_recording = f'{station}_{ptitle}_{etitle}_{at_time}'
     clean_name_of_recording = clean_string(name_of_recording)
+    clean_name_of_recording = f'{clean_name_of_recording}.ts'
     print(clean_name_of_recording)
     # process duration
     dur = a['duration']
