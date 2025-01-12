@@ -1,0 +1,171 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+import logging
+
+
+from dotenv import load_dotenv
+import os
+#import json
+
+
+from libdvr.util import run_command
+
+
+from libdvr.titan_classes import get_files_titan_xml, convert_gmt_utc, build_record_titan_df, make_at_time, clean_string
+from libdvr.titan_classes import TITAN
+
+
+# Load environment variables from the .env file
+load_dotenv()
+
+# Access environment variables
+TUNER_ID = os.getenv('TUNER_ID')
+TUNER_IP = os.getenv('TUNER_IP')
+
+TUNER_ID, TUNER_IP
+
+
+RECORDINGS = os.getenv('DVR_RECORDINGS')
+RECORDINGS
+
+
+DVR_HOME = '/home/tony/DVR'
+
+
+# # LOGGING
+
+# Configure logging
+logging.basicConfig(
+    filename="/home/tony/DVR/log/dvr.log", 
+    level=logging.INFO, 
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
+# Create a logger
+logger = logging.getLogger(__name__)
+
+# Log some messages
+logger.info("DVR application started.")
+# logger.warning("Low disk space detected.")
+# logger.error("Motion sensor malfunction.")
+
+
+to_be_recorded = get_files_titan_xml()
+to_be_recorded
+
+
+program_todo_list = build_record_titan_df(to_be_recorded)
+
+
+#program_todo_list
+
+
+def duration_to_hms(duration_str):
+  """
+  Converts a duration string (e.g., "02:45") to hours, minutes, and seconds.
+
+  Args:
+    duration_str: The duration string in the format "HH:MM" or "MM:SS".
+
+  Returns:
+    A tuple containing hours, minutes, and seconds as integers.
+  """
+  try:
+    if ':' not in duration_str:
+      raise ValueError("Invalid duration format. Expected 'HH:MM' or 'MM:SS'.")
+
+    parts = duration_str.split(':')
+    if len(parts) == 2:
+      hours = int(parts[0]) if parts[0] else 0
+      minutes = int(parts[1])
+      seconds = 0
+    elif len(parts) == 1:
+      hours = 0
+      minutes = int(parts[0])
+      seconds = 0
+    else:
+      raise ValueError("Invalid duration format. Expected 'HH:MM' or 'MM:SS'.")
+
+    seconds = (hours * 60 + minutes) * 60
+
+    return hours, minutes, seconds
+
+  except ValueError as e:
+    print(f"Error: {e}")
+    return None
+
+# Example usage:
+duration = "02:45"
+hours, minutes, seconds = duration_to_hms(duration)
+
+if hours is not None:
+  print(f"Hours: {hours}")
+  print(f"Minutes: {minutes}")
+  print(f"Seconds: {seconds}")
+
+
+def duration(dur):
+    hours, minutes, seconds = duration_to_hms(dur)
+    if seconds > 3600 * 2 - 1:
+        seconds += 3600 + 1800
+    seconds -= 3 # make room to start next show
+    return seconds
+
+
+def get_vchan(a):
+    chan = a['psip-major']
+    minor = a['psip-minor']
+    vchan = f'v{chan}.{minor}'
+    return vchan
+
+
+def run_at(name, time, dur_seconds, vchan):
+    global RECORDINGS
+    global TUNER_IP
+    cmd=f'echo curl -so {RECORDINGS}/{name} {TUNER_IP}:5004/auto/{vchan}?duration={dur_seconds}| at -t {time}'
+    logger.info(cmd)
+    print(cmd)
+    run_command(cmd)
+    
+
+
+def schedule_record(a):
+    station = a['station']
+    ptitle = a['program-title']
+    #etitle = a['episode-title']
+    etitle = a.get('episode-title', 'One') 
+    at_time = make_at_time(a['start-date'], a['start-time'])
+                
+    name_of_recording = f'{station}_{ptitle}_{etitle}_{at_time}.ts'
+    clean_name_of_recording = clean_string(name_of_recording)
+    print(clean_name_of_recording)
+    # process duration
+    dur = a['duration']
+    print(dur)
+    dur_seconds = duration(dur)
+    print(dur_seconds)
+    print(at_time)
+    vchan = get_vchan(a)
+    print(vchan)
+    run_at(clean_name_of_recording, at_time, dur_seconds, vchan)
+
+
+program_todo_list[0]
+
+
+for show in program_todo_list:
+    schedule_record(show)
+
+
+# clean up tvpi files
+for xml_file in to_be_recorded:
+    print('deleteing:', xml_file)
+    os.remove(xml_file)
+
+
+#cmd=f'echo curl -o {RECORDINGS}/tony1nbc.ts {TUNER_IP}:5004/auto/v46.1?duration=3600 | at 13:25'
+
+
+#! echo curl -so /home/tony/Videos/KSFY_DT_Monday_Night_Football_One_202501131915_ts 192.168.0.151:5004/auto/13.1?duration=15300| at 202501131915
+

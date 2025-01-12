@@ -25,6 +25,17 @@ def get_files_titan_xml():
     return fresults
 
 
+def get_files_titan_tvvi():
+    dir_path = '/home/tony/Downloads'
+    res = os.listdir(dir_path)
+    results = [i for i in res 
+              if i.endswith('tvvi')]
+    fresults = []
+    for file in results:
+        fresults.append(f'{dir_path}/{file}')
+    return fresults
+
+
 class TITAN:
     def _convert_gmt_local(self):
         #print(self.doc)
