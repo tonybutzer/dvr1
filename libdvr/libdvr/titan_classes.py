@@ -1,8 +1,51 @@
 import os
 import xmltodict
+import logging
 
 from zoneinfo import ZoneInfo
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from dotenv import load_dotenv
+
+from libdvr.util import run_command
+
+def init_dvr():
+    global TUNER_ID
+    global TUNER_IP
+    global RECORDINGS
+    global DVR_HOME
+    global logger
+    
+    load_dotenv()
+
+    TUNER_ID = os.getenv('TUNER_ID')
+    TUNER_IP = os.getenv('TUNER_IP')
+    RECORDINGS = os.getenv('DVR_RECORDINGS')
+    DVR_HOME = '/home/tony/DVR'
+ 
+    # # LOGGING
+
+    # Configure logging
+    logging.basicConfig(
+        filename="/home/tony/DVR/log/dvr.log",
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s"
+    )
+
+    # Create a logger
+    logger = logging.getLogger(__name__)
+
+    # Log some messages
+    logger.info("DVR application started.")
+    return logger
+    
+def run_at(name, time, dur_seconds, vchan):
+    global RECORDINGS
+    global TUNER_IP
+    cmd=f'echo curl -so {RECORDINGS}/{name} {TUNER_IP}:5004/auto/{vchan}?duration={dur_seconds}| at -t {time}'
+    logger.info(cmd)
+    print(cmd)
+    run_command(cmd)
+
 
 def uniquify(path):
     filename, extension = os.path.splitext(path)
@@ -14,7 +57,7 @@ def uniquify(path):
 
     return path
 
-def get_files_titan_xml():
+def get_files_titan_tvpi():
     dir_path = '/home/tony/Downloads'
     res = os.listdir(dir_path)
     results = [i for i in res 
@@ -34,6 +77,92 @@ def get_files_titan_tvvi():
     for file in results:
         fresults.append(f'{dir_path}/{file}')
     return fresults
+
+
+def get_xml_tvvi(file):
+    my_fields={}
+    with open(file) as fd:
+        doc = xmltodict.parse(fd.read())
+    my_fields['title'] = doc['tv-viewer-info']['program']['program-title']
+    a = doc['tv-viewer-info']['program']
+    my_fields['episode'] = a.get('episode-title', 'One')
+    my_fields['station'] = doc['tv-viewer-info']['program']['station']
+    chan = my_fields['major'] = doc['tv-viewer-info']['program']['psip-major']
+    minor = my_fields['minor'] = doc['tv-viewer-info']['program']['psip-minor']
+    my_fields['duration'] = doc['tv-viewer-info']['program']['duration']
+    #my_fields['title'] = doc['tv-program-info']['program']['program-title']
+    my_fields['vchan'] = f'v{chan}.{minor}'
+
+    now = datetime.now()
+    future_time = now + timedelta(seconds=10)
+    current_time = future_time.strftime('%Y%m%d%H%M')
+    at_time = current_time
+    print(at_time)
+    my_fields['at_time'] = at_time
+
+    return (my_fields)
+
+def t_schedule_record(a):
+    station = a['station']
+    ptitle = a['title']
+    #etitle = a['episode-title']
+    etitle = a.get('episode', 'One')
+  
+    at_time = a['at_time']
+    print(at_time)
+
+    name_of_recording = f'{station}_{ptitle}_{etitle}_{at_time}'
+    clean_name_of_recording = clean_string(name_of_recording)
+    clean_name_of_recording = f'{clean_name_of_recording}.ts'
+    print(clean_name_of_recording)
+    # process duration
+    dur = a['duration']
+    print(dur)
+    dur_seconds = duration(dur)
+    print(dur_seconds)
+    print(at_time)
+    vchan = a['vchan']
+    print(vchan)
+    run_at(clean_name_of_recording, at_time, dur_seconds, vchan)
+
+
+def duration_to_hms(duration_str):
+  """
+  Converts a duration string (e.g., "02:45") to hours, minutes, and seconds.
+  Args:
+    duration_str: The duration string in the format "HH:MM" or "MM:SS".
+  Returns:
+    A tuple containing hours, minutes, and seconds as integers.
+  """
+  try:
+    if ':' not in duration_str:
+      raise ValueError("Invalid duration format. Expected 'HH:MM' or 'MM:SS'.")
+
+    parts = duration_str.split(':')
+    if len(parts) == 2:
+      hours = int(parts[0]) if parts[0] else 0
+      minutes = int(parts[1])
+      seconds = 0
+    elif len(parts) == 1:
+      hours = 0
+      minutes = int(parts[0])
+      seconds = 0
+    else:
+      raise ValueError("Invalid duration format. Expected 'HH:MM' or 'MM:SS'.")
+
+    seconds = (hours * 60 + minutes) * 60
+
+    return hours, minutes, seconds
+
+  except ValueError as e:
+    print(f"Error: {e}")
+    return None
+
+def duration(dur):
+    hours, minutes, seconds = duration_to_hms(dur)
+    if seconds > 3600 * 2 - 1:
+        seconds += 3600 + 1800 - 3
+    return seconds
 
 
 class TITAN:

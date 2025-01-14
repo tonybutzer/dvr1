@@ -12,7 +12,7 @@ import os
 from libdvr.util import run_command
 
 
-from libdvr.titan_classes import get_files_titan_xml, convert_gmt_utc, build_record_titan_df, make_at_time, clean_string
+from libdvr.titan_classes import get_files_titan_tvpi, convert_gmt_utc, build_record_titan_df, make_at_time, clean_string
 from libdvr.titan_classes import TITAN
 
 
@@ -51,7 +51,7 @@ logger.info("DVR application started.")
 # logger.error("Motion sensor malfunction.")
 
 
-to_be_recorded = get_files_titan_xml()
+to_be_recorded = get_files_titan_tvpi()
 to_be_recorded
 
 

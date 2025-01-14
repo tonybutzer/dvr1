@@ -1,197 +1,26 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import logging
 
-
-from dotenv import load_dotenv
 import os
-#import json
 import xmltodict
 
 
-from libdvr.util import run_command
+from libdvr.titan_classes import get_files_titan_tvvi, get_xml_tvvi, t_schedule_record
+from libdvr.titan_classes import init_dvr
 
-
-# from importlib import reload
-# import libdvr
-# reload(libdvr.titan_classes) 
-from libdvr.titan_classes import get_files_titan_tvvi, convert_gmt_utc, build_record_titan_df, make_at_time, clean_string
-from libdvr.titan_classes import TITAN
-
-
-# Load environment variables from the .env file
-load_dotenv()
-
-# Access environment variables
-TUNER_ID = os.getenv('TUNER_ID')
-TUNER_IP = os.getenv('TUNER_IP')
-
-TUNER_ID, TUNER_IP
-
-
-RECORDINGS = os.getenv('DVR_RECORDINGS')
-RECORDINGS
-
-
-DVR_HOME = '/home/tony/DVR'
-
-
-# # LOGGING
-
-# Configure logging
-logging.basicConfig(
-    filename="/home/tony/DVR/log/dvr.log", 
-    level=logging.INFO, 
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
-
-# Create a logger
-logger = logging.getLogger(__name__)
-
-# Log some messages
-logger.info("DVR application started.")
-# logger.warning("Low disk space detected.")
-# logger.error("Motion sensor malfunction.")
-
+logger = init_dvr()
 
 to_be_recorded = get_files_titan_tvvi()
-to_be_recorded
-
-
-def get_xml(file):
-    my_fields={}
-    with open(file) as fd:
-        doc = xmltodict.parse(fd.read())
-    my_fields['title'] = doc['tv-viewer-info']['program']['program-title']
-    my_fields['episode'] = doc['tv-viewer-info']['program']['episode-title']
-    my_fields['station'] = doc['tv-viewer-info']['program']['station']
-    my_fields['major'] = doc['tv-viewer-info']['program']['psip-major']
-    my_fields['minor'] = doc['tv-viewer-info']['program']['psip-minor']
-    my_fields['duration'] = doc['tv-viewer-info']['program']['duration']
-    #my_fields['title'] = doc['tv-program-info']['program']['program-title']
-    return (my_fields)
-    
-
-
-now = get_xml(to_be_recorded[0])
-now
-
-
-#program_todo_list
-
-
-def duration_to_hms(duration_str):
-  """
-  Converts a duration string (e.g., "02:45") to hours, minutes, and seconds.
-
-  Args:
-    duration_str: The duration string in the format "HH:MM" or "MM:SS".
-
-  Returns:
-    A tuple containing hours, minutes, and seconds as integers.
-  """
-  try:
-    if ':' not in duration_str:
-      raise ValueError("Invalid duration format. Expected 'HH:MM' or 'MM:SS'.")
-
-    parts = duration_str.split(':')
-    if len(parts) == 2:
-      hours = int(parts[0]) if parts[0] else 0
-      minutes = int(parts[1])
-      seconds = 0
-    elif len(parts) == 1:
-      hours = 0
-      minutes = int(parts[0])
-      seconds = 0
-    else:
-      raise ValueError("Invalid duration format. Expected 'HH:MM' or 'MM:SS'.")
-
-    seconds = (hours * 60 + minutes) * 60
-
-    return hours, minutes, seconds
-
-  except ValueError as e:
-    print(f"Error: {e}")
-    return None
-
-# Example usage:
-duration = "02:45"
-hours, minutes, seconds = duration_to_hms(duration)
-
-if hours is not None:
-  print(f"Hours: {hours}")
-  print(f"Minutes: {minutes}")
-  print(f"Seconds: {seconds}")
-
-
-def duration(dur):
-    hours, minutes, seconds = duration_to_hms(dur)
-    if seconds > 3600 * 2 - 1:
-        seconds += 3600 + 1800
-    return seconds
-
-
-def get_vchan(a):
-    chan = a['major']
-    minor = a['minor']
-    vchan = f'v{chan}.{minor}'
-    return vchan
-
-
-def run_at(name, time, dur_seconds, vchan):
-    global RECORDINGS
-    global TUNER_IP
-    cmd=f'echo curl -so {RECORDINGS}/{name} {TUNER_IP}:5004/auto/{vchan}?duration={dur_seconds}| at -t {time}'
-    logger.info(cmd)
-    print(cmd)
-    run_command(cmd)
-    
-
-
-from datetime import datetime, timedelta
-
-def schedule_record(a):
-    station = a['station']
-    ptitle = a['title']
-    #etitle = a['episode-title']
-    etitle = a.get('episode', 'One') 
-   
-    now = datetime.now()
-    future_time = now + timedelta(seconds=60)
-    current_time = future_time.strftime('%Y%m%d%H%M')
-    at_time = current_time
-    print(at_time)
-                
-    name_of_recording = f'{station}_{ptitle}_{etitle}_{at_time}'
-    clean_name_of_recording = clean_string(name_of_recording)
-    clean_name_of_recording = f'{clean_name_of_recording}.ts'
-    print(clean_name_of_recording)
-    # process duration
-    dur = a['duration']
-    print(dur)
-    dur_seconds = duration(dur)
-    print(dur_seconds)
-    print(at_time)
-    vchan = get_vchan(a)
-    print(vchan)
-    run_at(clean_name_of_recording, at_time, dur_seconds, vchan)
+print(to_be_recorded)
 
 
 for show_file in to_be_recorded:
-    my_record = get_xml(show_file)
-    schedule_record(my_record)
+    my_record = get_xml_tvvi(show_file)
+    t_schedule_record(my_record)
     
-
-
 # clean up tvpi files
 for xml_file in to_be_recorded:
     print('deleteing:', xml_file)
     os.remove(xml_file)
-
-
-#cmd=f'echo curl -o {RECORDINGS}/tony1nbc.ts {TUNER_IP}:5004/auto/v46.1?duration=3600 | at 13:25'
-
-
-#! echo curl -so /home/tony/Videos/KSFY_DT_Monday_Night_Football_One_202501131915_ts 192.168.0.151:5004/auto/13.1?duration=15300| at 202501131915
 
