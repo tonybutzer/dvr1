@@ -102,6 +102,32 @@ def get_xml_tvvi(file):
 
     return (my_fields)
 
+def get_xml_tvpi(file):
+    my_fields={}
+    with open(file) as fd:
+        doc = xmltodict.parse(fd.read())
+    my_fields['title'] = doc['tv-program-info']['program']['program-title']
+    a = doc['tv-program-info']['program']
+    my_fields['episode'] = a.get('episode-title', 'One')
+    my_fields['station'] = doc['tv-program-info']['program']['station']
+    chan = my_fields['major'] = doc['tv-program-info']['program']['psip-major']
+    minor = my_fields['minor'] = doc['tv-program-info']['program']['psip-minor']
+    my_fields['duration'] = doc['tv-program-info']['program']['duration']
+    #my_fields['title'] = doc['tv-program-info']['program']['program-title']
+    my_fields['vchan'] = f'v{chan}.{minor}'
+
+    at_time = make_at_time(a['start-date'], a['start-time'])
+
+
+    # now = datetime.now()
+    # future_time = now + timedelta(seconds=10)
+    # current_time = future_time.strftime('%Y%m%d%H%M')
+    # at_time = current_time
+    # print(at_time)
+    my_fields['at_time'] = at_time
+
+    return (my_fields)
+
 def t_schedule_record(a):
     station = a['station']
     ptitle = a['title']
@@ -164,7 +190,7 @@ def duration(dur):
         seconds += 3600 + 1800 - 3
     return seconds
 
-
+'''
 class TITAN:
     def _convert_gmt_local(self):
         #print(self.doc)
@@ -204,6 +230,7 @@ class TITAN:
     def duration(self):
         self.duration= self.doc['tv-program-info']['program']['duration']
         return self.duration
+'''
 
 
 def examine_dates_titan(programs):
