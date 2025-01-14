@@ -137,7 +137,7 @@ def t_schedule_record(a):
     at_time = a['at_time']
     print(at_time)
 
-    name_of_recording = f'{station}_{ptitle}_{etitle}_{at_time}'
+    name_of_recording = f'{ptitle}_{etitle}_{station}_{at_time}'
     clean_name_of_recording = clean_string(name_of_recording)
     clean_name_of_recording = f'{clean_name_of_recording}.ts'
     print(clean_name_of_recording)
