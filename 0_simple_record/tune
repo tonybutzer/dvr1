@@ -1,0 +1,15 @@
+#! /bin/bash
+#!/bin/bash
+
+# Load environment variables from .env file
+while IFS='=' read -r key value; do
+  export "$key"="$value"
+done < "/home/tony/.env"
+
+echo $TUNER_IP
+
+chan=$1
+
+vchan=v$chan
+
+celluloid http://192.168.0.151:5004/auto/$vchan
