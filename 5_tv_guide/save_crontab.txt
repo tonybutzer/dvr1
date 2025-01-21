@@ -1,0 +1,7 @@
+SHELL=/bin/bash
+BASH_ENV=~/.bashrc_conda
+
+#30 1 * * * /home/tony/opt/tv4/favorites/cron_me.sh
+#15 1 * * * /home/tony/opt/tv4/favorites/cron_daily.sh
+5 0 * * * /home/tony/opt/dvr1/5_tv_guide/get_new_zap_sched.sh 
+15 0 * * * /home/tony/opt/dvr1/5_tv_guide/tv_guide/daily_record.py
