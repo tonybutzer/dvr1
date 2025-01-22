@@ -1,12 +1,15 @@
 import os
+import re
 import xmltodict
 import logging
+import pytz
 
 from zoneinfo import ZoneInfo
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 
 from libdvr.util import run_command
+from libdvr.zap import the_show
 
 def init_dvr():
     global TUNER_ID
@@ -190,48 +193,6 @@ def duration(dur):
         seconds += 3600 + 1800 - 3
     return seconds
 
-'''
-class TITAN:
-    def _convert_gmt_local(self):
-        #print(self.doc)
-        self.gmt_start_time= self.doc['tv-program-info']['program']['start-time']
-        self.gmt_start_date= self.doc['tv-program-info']['program']['start-date']
-        self.gmt_end_time= self.doc['tv-program-info']['program']['end-time']
-        self.gmt_end_date= self.doc['tv-program-info']['program']['end-date']
-        print (self.gmt_start_date, self.gmt_start_time)
-        
-
-    def __init__(self, file):
-        # print('init')
-        with open(file) as fd:
-            self.doc = xmltodict.parse(fd.read())
-        self_localtime = self._convert_gmt_local()
-        
-    def title(self):
-        self.title = self.doc['tv-program-info']['program']['program-title'].replace(' ', '_')
-        return self.title
-    
-    def start_time(self):
-        self.start_time= self.doc['tv-program-info']['program']['start-time']
-        return self.start_time
-    
-    def start_date(self):
-        self.start_date= self.doc['tv-program-info']['program']['start-date']
-        return self.start_date
-    
-    def info(self):
-        self.info = self.doc['tv-program-info']['program']
-        return self.info
-    
-    def end_time(self):
-        pass
-    def end_date(self):
-        pass
-    def duration(self):
-        self.duration= self.doc['tv-program-info']['program']['duration']
-        return self.duration
-'''
-
 
 def examine_dates_titan(programs):
     for program in programs:
@@ -289,7 +250,6 @@ def make_at_time(sdate, stime, zone='GMT'):
     return(at)
 
 
-import re
 
 def clean_string(string):
   """
@@ -303,8 +263,26 @@ def clean_string(string):
   """
   return re.sub(r'[^\w\s]', '_', string).replace(' ', '_')
 
-# Example usage
-# input_string = "This is a test string with spaces and special characters like !@#"
-# cleaned_string = clean_string(input_string)
-# print(cleaned_string)  # Output: This_is_a_test_string_with_spaces_and_special_characters_like______
+
+def record_the_show(station, start_time):
+    my_show = the_show(station, start_time)
+    dur_seconds = my_show['length'].values[0]
+    dur_seconds = int(dur_seconds) * 60
+    station = my_show['vchan'].values[0]
+    station = f'v{station}'
+    a = my_show['start'].values[0]
+    a1 = a.astype('datetime64[us]').astype(datetime) 
+    b1 = a1.astimezone() 
+    title = my_show['title'].values[0]
+    episode = my_show['sub-title'].values[0]
+    now = datetime.now()
+    local_timezone = now.astimezone().tzinfo
+    local_datetime = b1.replace(tzinfo=pytz.utc).astimezone(local_timezone)
+    at_time = local_datetime.strftime('%Y%m%d%H%M')
+    name_of_recording = f'{title}_{episode}_{station}_{at_time}'
+    clean_name_of_recording = clean_string(name_of_recording)
+    clean_name_of_recording = f'{clean_name_of_recording}.ts'
+    run_at(clean_name_of_recording, at_time, dur_seconds, station)
+    return my_show
+
 
