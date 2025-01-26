@@ -41,6 +41,7 @@ for d in dict_without_index:
         break
     #my_show = record_the_show(station, start)
     my_days = days.split('-')
+    print(my_days)
     if is_today_needed(my_days):
         #my_show = the_show(station, start)
         my_show = record_the_show(station, start)

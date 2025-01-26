@@ -1,0 +1,81 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+import pandas as pd
+from tabulate import tabulate
+
+
+from libdvr.util import run_command
+
+
+command='atqplus'
+res = run_command(command)
+
+
+from datetime import datetime, timezone
+
+def date_string_to_tz_aware_datetime(date_string):
+  """
+  Converts a date string in the format 'YYYYMMDDHHMM' to a timezone-aware datetime object.
+
+  Args:
+    date_string: The date string in the format 'YYYYMMDDHHMM'.
+
+  Returns:
+    A timezone-aware datetime object.
+  """
+  # Extract year, month, day, hour, and minute from the date string
+  year = int(date_string[:4])
+  month = int(date_string[4:6])
+  day = int(date_string[6:8])
+  hour = int(date_string[8:10])
+  minute = int(date_string[10:])
+
+  # Create a naive datetime object
+  dt = datetime(year, month, day, hour, minute)
+
+  now = datetime.now()
+  local_timezone = now.astimezone().tzinfo
+
+  # Make the datetime object timezone-aware in UTC
+  dt_utc = dt.replace(tzinfo=local_timezone)
+
+  return dt_utc
+
+# Example usage
+date_string = "202501230900"
+tz_aware_datetime = date_string_to_tz_aware_datetime(date_string)
+print(tz_aware_datetime)  # Output: 2025-01-23 09:00:00+00:00
+
+
+recs=[]
+for l in res:
+    l = str(l)
+    a=l.split('\n')
+    for b in a:
+        if 'curl' in b:
+            #print(b)
+            b = b.replace('/home/tony/Videos/','')
+            #print(b)
+            c = b.split(' ')
+            for d in c:
+                rec={}
+                #print(d)
+                if '.ts' in d:
+                    # print(d)
+                    d = d.replace('.ts','')
+                    dt = d.split('_')[-1]
+                    dt = date_string_to_tz_aware_datetime(dt)
+                    rec['when'] = dt
+                    rec['title'] = d
+                    recs.append(rec)
+show_df = pd.DataFrame(recs)
+
+df_sorted = show_df.sort_values(by='when') 
+
+print(tabulate(df_sorted, headers='keys', tablefmt='fancy_grid', showindex=False))
+
+
+
+
+
