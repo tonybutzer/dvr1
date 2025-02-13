@@ -36,6 +36,9 @@ for d in dict_without_index:
     # print(d)
     station = str(d['station'])
     start = str(d['start'])
+    if len(start) < 4:
+        start = f'0{start}'
+    print(start)
     days = str(d['days'])
     if days.startswith('#'):
         break

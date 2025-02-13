@@ -10,9 +10,9 @@ docker run -d \
   -e PLEX_CLAIM= `#optional` \
   -v /path/to/plex/library:/config \
   -v /path/to/tvseries:/tv \
-  -v /media/tony/plexLive/plexroot/1_Movies:/movies \
-  -v /media/tony/plexLive/plexroot/0_Music:/music \
-  -v /media/tony/plexLive/plexroot/2_Audiobooks:/audiobooks \
+  -v /mnt/plexLive/plexroot/1_Movies:/movies \
+  -v /mnt/plexLive/plexroot/0_Music:/music \
+  -v /mnt/plexLive/plexroot/2_Audiobooks:/audiobooks \
   --restart unless-stopped \
 docker.io/linuxserver/plex:latest
 
