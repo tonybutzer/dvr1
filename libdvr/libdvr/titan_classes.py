@@ -285,4 +285,25 @@ def record_the_show(station, start_time):
     run_at(clean_name_of_recording, at_time, dur_seconds, station)
     return my_show
 
+def record_the_show_no_guide(station, start_time):
+    # my_show = the_show(station, start_time)
+    dur_seconds = 60
+    dur_seconds = int(dur_seconds) * 60
+    #station = my_show['vchan'].values[0]
+    #station = f'v{station}'
+    #a = my_show['start'].values[0]
+    #a1 = a.astype('datetime64[us]').astype(datetime) 
+    #b1 = a1.astimezone() 
+    #title = my_show['title'].values[0]
+    #episode = my_show['sub-title'].values[0]
+    #now = datetime.now()
+    #local_timezone = now.astimezone().tzinfo
+    #local_datetime = b1.replace(tzinfo=pytz.utc).astimezone(local_timezone)
+    #at_time = local_datetime.strftime('%Y%m%d%H%M')
+    #name_of_recording = f'{title}_{episode}_{station}_{at_time}'
+    #clean_name_of_recording = clean_string(name_of_recording)
+    #clean_name_of_recording = f'{clean_name_of_recording}.ts'
+    #run_at(clean_name_of_recording, at_time, dur_seconds, station)
+    #return my_show
+
 

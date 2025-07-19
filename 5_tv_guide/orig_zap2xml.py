@@ -75,7 +75,45 @@ def get_args():
   return parser.parse_args()
 
 
+from urllib.request import Request, urlopen
 def get_cached(cache_dir, cache_key, delay, url):
+
+
+  data = None # No data for GET requests
+  # Create a dictionary for your custom headers, including the User-Agent
+  headers = {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+  }
+
+  cache_path = cache_dir.joinpath(cache_key)
+  if cache_path.is_file():
+    print('FROM CACHE:', url)
+    with open(cache_path, 'rb') as f:
+      return f.read()
+  else:
+    req = Request(url, data=data, headers=headers)
+    print('Fetching:  ', url)
+    try:
+      with urlopen(req) as response:
+        result = response.read()
+    except Exception as e:
+      print(f"An error occurred: {e}")
+      if e.code == 400:
+        print('Got a 400 error!  Ignoring it.')
+        result = (
+            b'{'
+            b'"note": "Got a 400 error at this time, skipping.",'
+            b'"channels": []'
+            b'}')
+      else:
+        raise
+    with open(cache_path, 'wb') as f:
+      f.write(result)
+    time.sleep(delay)
+    return result
+
+
+def get_cached_orig(cache_dir, cache_key, delay, url):
   cache_path = cache_dir.joinpath(cache_key)
   if cache_path.is_file():
     print('FROM CACHE:', url)
@@ -143,7 +181,9 @@ def main():
   remove_stale_cache(cache_dir, zap_time)
 
   out = ET.Element('tv')
-  out.set('source-info-url', 'http://tvlistings.zap2it.com/')
+#  out.set('source-info-url', 'http://tvlistings.zap2it.com/')
+#  out.set('source-info-url', 'http://tvlistings.gracenote.com/')
+  out.set('source-info-url', 'http://www.tribute.ca/tv/')
   out.set('source-info-name', 'zap2it.com')
   out.set('generator-info-name', 'zap2xml.py')
   out.set('generator-info-url', 'github.com/arantius/zap2xml-py')
@@ -157,7 +197,10 @@ def main():
     qs = base_qs.copy()
     qs['lineupId'] = '%s-%s-DEFAULT' % (args.zap_country, args.zap_headendId)
     qs['time'] = i_time
-    url = 'https://tvlistings.zap2it.com/api/grid?'
+    #url = 'https://tvlistings.zap2it.com/api/grid?'
+    url = ' https://tvlistings.gracenote.com/api/grid?'
+    #url = 'https://www.tribute.ca/tv/api/grid?'
+    #url = ' https://tvlistings.gracenote.com/grid-affiliates.html?aid=lat'
     url += urllib.parse.urlencode(qs)
 
     result = get_cached(cache_dir, str(i_time), args.delay, url)
