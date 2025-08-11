@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+import pandas as pd
+from datetime import datetime
+from datetime import date
+import pytz
+import sys
+
+
+from libdvr.zap import the_show
+from libdvr.titan_classes import clean_string, run_at, init_dvr, record_the_show
+
+
+init_dvr()
+
+def main():
+    """
+    Reads two arguments (station and start) from the command line and prints them.
+
+    Args:
+        None
+
+    Raises:
+        SystemExit: If the number of arguments is not 3.
+    """
+    if len(sys.argv) != 3:
+        print("Usage: python your_script.py <station> <start>")
+        sys.exit(1)
+
+    station = sys.argv[1]
+    start = sys.argv[2]
+
+    print(f"Station: {station}")
+    print(f"Start: {start}")
+
+    my_show = record_the_show(station, start)
+
+if __name__ == "__main__":
+    main()
+
+
