@@ -54,7 +54,12 @@ my_fields['episode'] = 'One'
 chan = station
 my_fields['station']=station
 minor = my_fields['minor'] = '1'
-my_fields['duration'] = duration #'00:55'
+
+number = int(duration)
+formatted_string = f"{number:04d}"
+result = f"{formatted_string[:2]}:{formatted_string[2:]}"
+print(result)
+my_fields['duration'] = result #'00:55'
 my_fields['vchan'] = f'v{chan}'
 
 now = datetime.now()
